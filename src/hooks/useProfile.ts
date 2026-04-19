@@ -1,28 +1,60 @@
-// useProfile — Mission 1: returns mock profile data
-// Mission 3C: replace with parallel Supabase fetches
+// ─── useProfile — Firestore with mock fallback ───
+import { useEffect, useState } from 'react'
+import { collection, getDocs, query, where, orderBy, doc, updateDoc } from 'firebase/firestore'
 import { useAppStore } from '../store/useAppStore'
+import { db, isFirebaseEnabled } from '../lib/firebase'
 import { MOCK_BADGES, MOCK_POINTS_HISTORY } from '../data/mockData'
-import type { Badge, PointsEntry } from '../types'
-
-const MOCK_REWARDS = [
-  { id: 'r1', name: '10% Off Next Order', description: 'Enjoy 10% off at any food counter', emoji: '🎁', pointsCost: 500,  isLocked: false, tag: 'Popular' },
-  { id: 'r2', name: 'Priority Entry',     description: 'Skip the queue at Gate 1',         emoji: '⚡', pointsCost: 1000, isLocked: false },
-  { id: 'r3', name: 'VIP Upgrade',        description: 'One-match VIP lounge access',      emoji: '💎', pointsCost: 3000, isLocked: false, tag: 'Premium' },
-  { id: 'r4', name: 'Season Pass Discount',description: '₹500 off next season pass',       emoji: '🏟️', pointsCost: 5000, isLocked: false },
-]
+import type { Badge, PointsEntry, User } from '../types'
 
 export function useProfile() {
   const user = useAppStore(s => s.user)
+  const setUser = useAppStore(s => s.setUser)
+  const showToast = useAppStore(s => s.showToast)
+  const [badges, setBadges] = useState<Badge[]>(MOCK_BADGES)
+  const [pointsHistory, setPointsHistory] = useState<PointsEntry[]>(MOCK_POINTS_HISTORY)
+  const [isLoading, setIsLoading] = useState(false)
 
-  const badges: Badge[] = MOCK_BADGES
-  const pointsHistory: PointsEntry[] = MOCK_POINTS_HISTORY
-  const rewards = MOCK_REWARDS
+  useEffect(() => {
+    if (!isFirebaseEnabled || !db || !user) return
+
+    setIsLoading(true)
+    Promise.all([
+      getDocs(query(collection(db, 'badges'), where('userId', '==', user.uid))),
+      getDocs(query(collection(db, 'pointsHistory'), where('userId', '==', user.uid), orderBy('createdAt', 'desc'))),
+    ]).then(([badgeSnap, pointsSnap]) => {
+      if (!badgeSnap.empty) {
+        setBadges(badgeSnap.docs.map(d => ({ id: d.id, ...d.data() } as Badge)))
+      }
+      if (!pointsSnap.empty) {
+        setPointsHistory(pointsSnap.docs.map(d => ({ id: d.id, ...d.data() } as PointsEntry)))
+      }
+    }).catch(err => {
+      console.warn('Firestore profile data load failed:', err)
+    }).finally(() => setIsLoading(false))
+  }, [user?.uid])
+
+  // Update user profile in Firestore
+  async function updateProfile(updates: Partial<User>) {
+    if (!user) return
+
+    const updatedUser = { ...user, ...updates }
+    setUser(updatedUser)
+
+    if (isFirebaseEnabled && db) {
+      try {
+        const userDocRef = doc(db, 'users', user.uid)
+        await updateDoc(userDocRef, updates as Record<string, any>)
+      } catch (err) {
+        console.warn('Firestore profile update failed:', err)
+      }
+    }
+  }
 
   return {
     user,
     badges,
     pointsHistory,
-    rewards,
-    isLoading: false,
+    isLoading,
+    updateProfile,
   }
 }

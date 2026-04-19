@@ -1,7 +1,8 @@
-// useCrowdZones — Mission 1: returns mock zones
-// Mission 3A: replace with Supabase realtime subscription
+// ─── useCrowdZones — Firestore real-time with mock fallback ───
 import { useEffect, useState } from 'react'
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore'
 import { useAppStore } from '../store/useAppStore'
+import { db, isFirebaseEnabled } from '../lib/firebase'
 import { MOCK_ZONES, MOCK_GATES } from '../data/mockData'
 import type { CrowdZone, Gate } from '../types'
 
@@ -13,12 +14,43 @@ export function useCrowdZones() {
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    setActiveZones(MOCK_ZONES)
-    // Simulate live updates every 30s in Mission 1
-    const interval = setInterval(() => {
+    // ─── Demo mode ───
+    if (!isFirebaseEnabled || !db) {
+      setActiveZones(MOCK_ZONES)
+      const interval = setInterval(() => setLastUpdated(new Date()), 30000)
+      return () => clearInterval(interval)
+    }
+
+    // ─── Firebase real-time: crowd zones ───
+    setIsLoading(true)
+    const zonesRef = collection(db, 'crowdZones')
+    const unsubZones = onSnapshot(query(zonesRef), (snapshot) => {
+      if (snapshot.empty) {
+        // No Firestore data yet — fall back to mock
+        setActiveZones(MOCK_ZONES)
+        setIsLoading(false)
+        return
+      }
+      const liveZones = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CrowdZone))
+      setZones(liveZones)
+      setActiveZones(liveZones)
       setLastUpdated(new Date())
-    }, 30000)
-    return () => clearInterval(interval)
+      setIsLoading(false)
+    }, (err) => {
+      console.warn('Firestore zones listener error, using mock data:', err)
+      setActiveZones(MOCK_ZONES)
+      setIsLoading(false)
+    })
+
+    // ─── Firebase real-time: gates ───
+    const gatesRef = collection(db, 'gates')
+    const unsubGates = onSnapshot(query(gatesRef), (snapshot) => {
+      if (!snapshot.empty) {
+        setGates(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Gate)))
+      }
+    })
+
+    return () => { unsubZones(); unsubGates() }
   }, [])
 
   return { zones, gates, lastUpdated, isLoading }

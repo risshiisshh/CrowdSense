@@ -1,8 +1,10 @@
 import React from 'react'
 import { ChevronRight, LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { signOut } from 'firebase/auth'
 import PageWrapper from '../components/layout/PageWrapper'
 import { useAppStore } from '../store/useAppStore'
+import { auth, isFirebaseEnabled } from '../lib/firebase'
 
 function Toggle({
   value,
@@ -37,7 +39,10 @@ export default function SettingsPage() {
 
   const prefs = user?.preferences
 
-  function handleSignOut() {
+  async function handleSignOut() {
+    if (isFirebaseEnabled && auth) {
+      try { await signOut(auth) } catch (e) { console.warn('Sign out error:', e) }
+    }
     setUser(null)
     showToast('Signed out successfully', 'info')
     navigate('/login')
