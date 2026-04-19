@@ -1,0 +1,17 @@
+/* add to end of index.css — desktop sidebar offset */
+
+/* Desktop: push page content right of sidebar */
+@media (min-width: 768px) {
+  main[data-sidebar-collapsed="false"] {
+    margin-left: var(--sidebar-width) !important;
+  }
+  main[data-sidebar-collapsed="true"] {
+    margin-left: var(--sidebar-collapsed) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  main {
+    margin-left: 0 !important;
+  }
+}

@@ -1,0 +1,40 @@
+{
+  "name": "CrowdSense",
+  "short_name": "CrowdSense",
+  "description": "Real-time sports venue intelligence — navigate crowds, order food, earn rewards",
+  "theme_color": "#F59E0B",
+  "background_color": "#08090D",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "lang": "en",
+  "categories": ["sports", "utilities", "food"],
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "maskable any"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Stadium Map",
+      "url": "/dashboard",
+      "description": "View real-time crowd map"
+    },
+    {
+      "name": "Order Food",
+      "url": "/food",
+      "description": "Order food to your seat"
+    }
+  ]
+}
