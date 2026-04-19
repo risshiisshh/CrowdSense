@@ -1,7 +1,8 @@
-import React from 'react'
-import { ChatMessage } from '../../types'
+import React, { memo } from 'react'
+import type { ChatMessage } from '../../types'
 
 interface ChatBubbleProps {
+  /** The chat message to render — user or assistant */
   message: ChatMessage
 }
 
@@ -28,12 +29,16 @@ function formatTime(isoString: string): string {
   })
 }
 
-export default function ChatBubble({ message }: ChatBubbleProps) {
+/**
+ * Renders a single chat message bubble.
+ * Memoised — only re-renders when `message` reference changes.
+ */
+const ChatBubble = memo(function ChatBubble({ message }: ChatBubbleProps) {
   const isUser = message.role === 'user'
 
   if (isUser) {
     return (
-      <div className="flex justify-end mb-3">
+      <div className="flex justify-end mb-3" role="listitem">
         <div className="max-w-[82%]">
           <div
             className="px-4 py-2.5 rounded-2xl rounded-tr-sm font-body text-sm leading-relaxed"
@@ -45,7 +50,7 @@ export default function ChatBubble({ message }: ChatBubbleProps) {
           >
             {message.content}
           </div>
-          <p className="text-[10px] text-text-muted mt-1 text-right">
+          <p className="text-[10px] text-text-muted mt-1 text-right" aria-label={`Sent at ${formatTime(message.timestamp)}`}>
             {formatTime(message.timestamp)}
           </p>
         </div>
@@ -54,7 +59,7 @@ export default function ChatBubble({ message }: ChatBubbleProps) {
   }
 
   return (
-    <div className="flex items-start gap-2.5 mb-3">
+    <div className="flex items-start gap-2.5 mb-3" role="listitem">
       {/* AI avatar */}
       <div
         className="w-7 h-7 rounded-full flex-shrink-0 flex items-center justify-center mt-0.5"
@@ -62,6 +67,7 @@ export default function ChatBubble({ message }: ChatBubbleProps) {
           background: 'linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%)',
           boxShadow: '0 0 10px rgba(139,92,246,0.4)',
         }}
+        aria-hidden="true"
       >
         <span className="text-[11px]">🤖</span>
       </div>
@@ -77,10 +83,12 @@ export default function ChatBubble({ message }: ChatBubbleProps) {
         >
           {renderContent(message.content)}
         </div>
-        <p className="text-[10px] text-text-muted mt-1">
+        <p className="text-[10px] text-text-muted mt-1" aria-label={`Received at ${formatTime(message.timestamp)}`}>
           CrowdSense AI · {formatTime(message.timestamp)}
         </p>
       </div>
     </div>
   )
-}
+})
+
+export default ChatBubble
