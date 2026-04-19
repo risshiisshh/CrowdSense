@@ -100,7 +100,7 @@ export async function generateGeminiResponse(
 
   try {
     const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-1.5-flash',
       systemInstruction: buildSystemPrompt(context),
       safetySettings: SAFETY_SETTINGS,
       generationConfig: {
