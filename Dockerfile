@@ -21,7 +21,7 @@ ENV VITE_FIREBASE_APP_ID=$VITE_FIREBASE_APP_ID
 ENV VITE_USE_FIREBASE=$VITE_USE_FIREBASE
 
 COPY package*.json ./
-RUN npm ci
+RUN npm install --legacy-peer-deps
 COPY . .
 RUN npm run build
 
