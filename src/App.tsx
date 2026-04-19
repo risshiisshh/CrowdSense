@@ -1,8 +1,9 @@
 import React, { useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from './hooks/useAuth'
 import { useNotifications } from './hooks/useNotifications'
 import { useAppStore } from './store/useAppStore'
+import { trackPageView, setAnalyticsUser } from './lib/analytics'
 import NavBar from './components/layout/NavBar'
 import Sidebar from './components/layout/Sidebar'
 import ToastContainer from './components/ui/Toast'
@@ -52,6 +53,22 @@ function ThemeController() {
   return null
 }
 
+// Analytics page-view tracker — fires on every route change
+function AnalyticsTracker() {
+  const location = useLocation()
+  const user = useAppStore(s => s.user)
+
+  useEffect(() => {
+    trackPageView(location.pathname)
+  }, [location.pathname])
+
+  useEffect(() => {
+    if (user) setAnalyticsUser(user.uid, user.tier)
+  }, [user?.uid])
+
+  return null
+}
+
 // Inner shell — reads sidebar state for desktop offset
 function AppShellInner({ children }: { children: React.ReactNode }) {
   useNotifications()
@@ -78,8 +95,18 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           paddingLeft: `clamp(0px, calc((100vw - 767px) * 9999), ${desktopOffset})`,
         }}
       >
+        {/* Skip to main content link for accessibility */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-50 focus:px-4 focus:py-2 focus:rounded-lg focus:text-sm focus:font-semibold"
+          style={{ background: '#F59E0B', color: '#08090D' }}
+        >
+          Skip to main content
+        </a>
         <NavBar />
         <main
+          id="main-content"
+          role="main"
           className="flex-1 overflow-y-auto"
           style={{
             paddingTop: 'var(--nav-height)',
@@ -108,6 +135,7 @@ export default function App() {
   return (
     <BrowserRouter>
       <ThemeController />
+      <AnalyticsTracker />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
 

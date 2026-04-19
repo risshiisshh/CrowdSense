@@ -29,6 +29,9 @@ function ToastItem({ toast }: { toast: ToastMessage }) {
 
   return (
     <div
+      role="alert"
+      aria-live="assertive"
+      aria-atomic="true"
       className="flex items-start gap-3 rounded-lg px-4 py-3 shadow-modal border font-body text-sm cursor-pointer"
       style={{
         background: bg,
@@ -42,9 +45,9 @@ function ToastItem({ toast }: { toast: ToastMessage }) {
       }}
       onClick={() => dismiss(toast.id)}
     >
-      <span style={{ color, marginTop: 1 }}>{ICONS[toast.type]}</span>
+      <span style={{ color, marginTop: 1 }} aria-hidden="true">{ICONS[toast.type]}</span>
       <span className="flex-1 leading-snug">{toast.message}</span>
-      <X size={14} className="opacity-50 hover:opacity-100 mt-0.5 flex-shrink-0" />
+      <button onClick={() => dismiss(toast.id)} aria-label="Dismiss notification" className="opacity-50 hover:opacity-100 mt-0.5 flex-shrink-0 bg-transparent border-none p-0"><X size={14} /></button>
     </div>
   )
 }

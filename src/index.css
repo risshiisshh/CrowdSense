@@ -499,3 +499,88 @@ button:active:not(:disabled) {
     --nav-height: 60px;
   }
 }
+
+/* ============================================================
+   Accessibility
+   ============================================================ */
+
+/* ─── Focus-visible outlines for keyboard navigation ─── */
+*:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="switch"]:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.15);
+}
+
+/* ─── Screen reader only utility ─── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only:focus,
+.sr-only.focus\:not-sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: 0;
+  margin: 0;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* ─── Prefers reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .animate-pulse,
+  .glow-pulse,
+  .page-enter,
+  .stagger-children > * {
+    animation: none !important;
+  }
+}
+
+/* ─── High contrast mode support ─── */
+@media (prefers-contrast: high) {
+  :root {
+    --border: rgba(255, 255, 255, 0.5);
+    --border-subtle: rgba(255, 255, 255, 0.3);
+    --text-secondary: rgba(255, 255, 255, 0.85);
+    --text-muted: rgba(255, 255, 255, 0.7);
+  }
+}
+
+/* ─── Visible focus ring for toggle switches ─── */
+[role="switch"]:focus-visible {
+  outline: 2px solid var(--amber);
+  outline-offset: 3px;
+}
+
