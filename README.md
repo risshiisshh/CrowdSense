@@ -101,6 +101,12 @@ The app provides fans with:
 - Camera view with AR overlay
 - Zone density overlays in camera feed
 
+### 🤖 Gemini AI Assistant
+- Live **context-aware chatbot** using Gemini 1.5 Flash
+- Can answer venue questions, order wait times, crowd logic
+- Knows your tier, points, profile, and active orders
+- Graceful mock fallback in demo mode
+
 ---
 
 ## 🏗️ Tech Stack
@@ -112,7 +118,8 @@ The app provides fans with:
 | **Styling** | Tailwind CSS + Custom CSS Variables |
 | **State** | Zustand (with `persist` middleware) |
 | **Routing** | React Router v6 |
-| **Backend** | Firebase (Auth + Firestore) |
+| **Backend** | Firebase (Auth, Firestore, Performance, Remote Config) |
+| **AI Subsystem** | Google Gemini 1.5 Flash AI (`@google/generative-ai`) |
 | **Containerization** | Docker (nginx:alpine) |
 | **Deployment** | Google Cloud Run (asia-south1) |
 | **CI/CD** | gcloud run deploy --source |
@@ -126,12 +133,12 @@ CrowdSense/
 ├── public/               # Static assets, PWA manifest
 ├── src/
 │   ├── components/       # Reusable UI components
-│   │   ├── chat/         # AI chat bot
+│   │   ├── chat/         # Gemini AI chat bot
 │   │   ├── food/         # Cart, food cards, order tracker
 │   │   ├── layout/       # NavBar, Sidebar, PageWrapper, BottomNav
 │   │   ├── map/          # StadiumMap SVG, ZoneTooltip, SeatView
 │   │   ├── profile/      # Badges, PointsHistory, RewardCard
-│   │   └── ui/           # Badge, Card, LiveDot, Toast, XPBar, etc.
+│   │   └── ui/           # ErrorBoundary, StatCard, Toast, etc.
 │   ├── data/
 │   │   └── mockData.ts   # Mock data (zones, events, menu, users)
 │   ├── hooks/            # Custom React hooks
@@ -142,7 +149,11 @@ CrowdSense/
 │   │   ├── useOrders.ts      # Order placement + tracking
 │   │   └── useProfile.ts     # Badges, points, profile updates
 │   ├── lib/
-│   │   ├── firebase.ts   # Firebase init (env-aware)
+│   │   ├── firebase.ts   # Firebase init (Auth, DB, Performance)
+│   │   ├── gemini.ts     # Google Gemini API integration
+│   │   ├── remoteConfig.ts # Typed feature flags and defaults
+│   │   ├── logger.ts     # Centralized structured logger
+│   │   ├── analytics.ts  # Performance tracing & GA4 events
 │   │   ├── crowd.ts      # Zone color/fill utilities
 │   │   ├── points.ts     # Points formatting
 │   │   └── badges.ts     # Badge logic
@@ -195,6 +206,7 @@ VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
 VITE_FIREBASE_MESSAGING_SENDER_ID=123456789
 VITE_FIREBASE_APP_ID=1:123456789:web:abcdef
 VITE_USE_FIREBASE=true
+VITE_GEMINI_API_KEY=your_gemini_key # Get from aistudio.google.com
 ```
 
 Then restart the dev server. See `.env.example` for a template.
@@ -232,7 +244,8 @@ gcloud auth login
 gcloud config set project YOUR_PROJECT_ID
 gcloud services enable cloudbuild.googleapis.com run.googleapis.com artifactregistry.googleapis.com
 
-# Deploy
+# Create a .env.production file with your real Keys (this is ignored by Git, but read by Vite inside Docker)
+# Then deploy:
 gcloud run deploy crowdsense \
   --source . \
   --region asia-south1 \
@@ -241,8 +254,7 @@ gcloud run deploy crowdsense \
   --port 8080 \
   --memory 256Mi \
   --min-instances 0 \
-  --max-instances 3 \
-  --set-build-env-vars "VITE_FIREBASE_API_KEY=...,VITE_USE_FIREBASE=true"
+  --max-instances 3
 ```
 
 After deployment, add your Cloud Run URL to **Firebase Console → Authentication → Authorized Domains**.
