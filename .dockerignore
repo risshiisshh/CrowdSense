@@ -4,4 +4,5 @@ dist
 .gitignore
 *.md
 .vscode
-.env*
+.env.local
+.env.*.local
