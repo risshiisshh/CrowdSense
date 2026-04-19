@@ -4,6 +4,8 @@ import { useAuth } from './hooks/useAuth'
 import { useNotifications } from './hooks/useNotifications'
 import { useAppStore } from './store/useAppStore'
 import { trackPageView, setAnalyticsUser } from './lib/analytics'
+import { initRemoteConfig } from './lib/remoteConfig'
+import { ErrorBoundary } from './components/ui/ErrorBoundary'
 import NavBar from './components/layout/NavBar'
 import Sidebar from './components/layout/Sidebar'
 import ToastContainer from './components/ui/Toast'
@@ -39,7 +41,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 // Theme & compact synchroniser — runs once inside BrowserRouter context
 function ThemeController() {
-  const theme = useAppStore(s => s.theme)
+  const theme       = useAppStore(s => s.theme)
   const compactView = useAppStore(s => s.compactView)
 
   useEffect(() => {
@@ -56,7 +58,7 @@ function ThemeController() {
 // Analytics page-view tracker — fires on every route change
 function AnalyticsTracker() {
   const location = useLocation()
-  const user = useAppStore(s => s.user)
+  const user     = useAppStore(s => s.user)
 
   useEffect(() => {
     trackPageView(location.pathname)
@@ -66,6 +68,14 @@ function AnalyticsTracker() {
     if (user) setAnalyticsUser(user.uid, user.tier)
   }, [user?.uid])
 
+  return null
+}
+
+// Remote Config initializer — runs once at app mount
+function RemoteConfigInit() {
+  useEffect(() => {
+    void initRemoteConfig()
+  }, [])
   return null
 }
 
@@ -109,9 +119,9 @@ function AppShellInner({ children }: { children: React.ReactNode }) {
           role="main"
           className="flex-1 overflow-y-auto"
           style={{
-            paddingTop: 'var(--nav-height)',
+            paddingTop:    'var(--nav-height)',
             paddingBottom: '32px',
-            background: 'var(--bg-root)',
+            background:    'var(--bg-root)',
           }}
         >
           <div className="page-enter">
@@ -133,40 +143,43 @@ function AppShell({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <ThemeController />
-      <AnalyticsTracker />
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
+    <ErrorBoundary>
+      <BrowserRouter>
+        <ThemeController />
+        <AnalyticsTracker />
+        <RemoteConfigInit />
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
 
-        <Route path="/" element={
-          <ProtectedRoute>
-            <AppShell><Navigate to="/home" replace /></AppShell>
-          </ProtectedRoute>
-        } />
-
-        {[
-          { path: '/home',          element: <HomePage /> },
-          { path: '/dashboard',     element: <DashboardPage /> },
-          { path: '/food',          element: <FoodPage /> },
-          { path: '/cart',          element: <CartPage /> },
-          { path: '/wallet',        element: <WalletPage /> },
-          { path: '/profile',       element: <ProfilePage /> },
-          { path: '/notifications', element: <NotificationsPage /> },
-          { path: '/settings',      element: <SettingsPage /> },
-          { path: '/ar',            element: <ARPreviewPage /> },
-          { path: '/stats',         element: <ActivityTimelinePage /> },
-          { path: '/admin',         element: <AdminPage /> },
-        ].map(({ path, element }) => (
-          <Route key={path} path={path} element={
+          <Route path="/" element={
             <ProtectedRoute>
-              <AppShell>{element}</AppShell>
+              <AppShell><Navigate to="/home" replace /></AppShell>
             </ProtectedRoute>
           } />
-        ))}
 
-        <Route path="*" element={<Navigate to="/home" replace />} />
-      </Routes>
-    </BrowserRouter>
+          {[
+            { path: '/home',          element: <HomePage /> },
+            { path: '/dashboard',     element: <DashboardPage /> },
+            { path: '/food',          element: <FoodPage /> },
+            { path: '/cart',          element: <CartPage /> },
+            { path: '/wallet',        element: <WalletPage /> },
+            { path: '/profile',       element: <ProfilePage /> },
+            { path: '/notifications', element: <NotificationsPage /> },
+            { path: '/settings',      element: <SettingsPage /> },
+            { path: '/ar',            element: <ARPreviewPage /> },
+            { path: '/stats',         element: <ActivityTimelinePage /> },
+            { path: '/admin',         element: <AdminPage /> },
+          ].map(({ path, element }) => (
+            <Route key={path} path={path} element={
+              <ProtectedRoute>
+                <AppShell>{element}</AppShell>
+              </ProtectedRoute>
+            } />
+          ))}
+
+          <Route path="*" element={<Navigate to="/home" replace />} />
+        </Routes>
+      </BrowserRouter>
+    </ErrorBoundary>
   )
 }

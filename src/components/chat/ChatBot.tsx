@@ -6,7 +6,7 @@ import ChatBubble from './ChatBubble'
 
 export default function ChatBot() {
   const { chatOpen, setChatOpen } = useAppStore()
-  const { messages, isTyping, suggestions, sendMessage, clearChat } = useChatBot()
+  const { messages, isTyping, suggestions, sendMessage, clearChat, isAiMode } = useChatBot()
   const [input, setInput] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -223,7 +223,9 @@ export default function ChatBot() {
 
         {/* Powered by line */}
         <p className="text-center text-[10px] text-text-muted pb-3 font-body">
-          Powered by CrowdSense AI · Mock mode
+          {isAiMode
+            ? '✨ Powered by Gemini AI'
+            : '🧪 CrowdSense AI · Demo mode'}
         </p>
       </div>
     </>

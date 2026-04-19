@@ -5,6 +5,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { useAppStore } from '../store/useAppStore'
 import { auth, db, isFirebaseEnabled } from '../lib/firebase'
 import { MOCK_USER } from '../data/mockData'
+import { logger } from '../lib/logger'
 import type { User } from '../types'
 
 // Default preferences for new users
@@ -87,7 +88,7 @@ export function useAuth() {
             setUser(firebaseUserToAppUser(fbUser))
           }
         } catch (err) {
-          console.warn('Firestore profile load failed, using basic auth data:', err)
+          logger.warn('Firestore profile load failed, using basic auth data', err)
           setUser(firebaseUserToAppUser(fbUser))
         }
       } else {

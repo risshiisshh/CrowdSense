@@ -1,9 +1,24 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
+import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword, type AuthError } from 'firebase/auth'
 import { useAppStore } from '../store/useAppStore'
 import { auth, googleProvider, isFirebaseEnabled } from '../lib/firebase'
 import { MOCK_USER } from '../data/mockData'
+import { logger } from '../lib/logger'
+
+/** Maps Firebase Auth error codes to user-friendly messages */
+function authErrorMessage(err: unknown): string {
+  const code = (err as AuthError)?.code
+  switch (code) {
+    case 'auth/user-not-found':      return 'No account found. Try signing up.'
+    case 'auth/wrong-password':      return 'Incorrect password.'
+    case 'auth/email-already-in-use':return 'Email already in use. Try signing in.'
+    case 'auth/weak-password':       return 'Password must be at least 6 characters.'
+    case 'auth/invalid-email':       return 'Invalid email address.'
+    case 'auth/popup-closed-by-user':return 'Sign-in cancelled.'
+    default:                          return (err instanceof Error) ? err.message : 'Authentication failed'
+  }
+}
 
 export default function LoginPage() {
   const navigate = useNavigate()
@@ -32,9 +47,9 @@ export default function LoginPage() {
       await signInWithPopup(auth, googleProvider)
       // useAuth listener will handle setting the user
       navigate('/home')
-    } catch (err: any) {
-      console.error('Google sign-in failed:', err)
-      setError(err?.message || 'Google sign-in failed')
+    } catch (err: unknown) {
+      logger.warn('Google sign-in failed', err)
+      setError(authErrorMessage(err))
       setLoading(false)
     }
   }
@@ -63,14 +78,9 @@ export default function LoginPage() {
         await signInWithEmailAndPassword(auth, email, password)
       }
       navigate('/home')
-    } catch (err: any) {
-      const msg = err?.code === 'auth/user-not-found' ? 'No account found. Try signing up.'
-        : err?.code === 'auth/wrong-password' ? 'Incorrect password.'
-        : err?.code === 'auth/email-already-in-use' ? 'Email already in use. Try signing in.'
-        : err?.code === 'auth/weak-password' ? 'Password must be at least 6 characters.'
-        : err?.code === 'auth/invalid-email' ? 'Invalid email address.'
-        : err?.message || 'Authentication failed'
-      setError(msg)
+    } catch (err: unknown) {
+      logger.warn('Email auth failed', err)
+      setError(authErrorMessage(err))
       setLoading(false)
     }
   }

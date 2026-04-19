@@ -1,9 +1,11 @@
 // ─── useCrowdZones — Firestore real-time with mock fallback ───
 import { useEffect, useState } from 'react'
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore'
+import { collection, onSnapshot, query } from 'firebase/firestore'
 import { useAppStore } from '../store/useAppStore'
 import { db, isFirebaseEnabled } from '../lib/firebase'
+import { traceAsync } from '../lib/analytics'
 import { MOCK_ZONES, MOCK_GATES } from '../data/mockData'
+import { logger } from '../lib/logger'
 import type { CrowdZone, Gate } from '../types'
 
 export function useCrowdZones() {
@@ -37,7 +39,7 @@ export function useCrowdZones() {
       setLastUpdated(new Date())
       setIsLoading(false)
     }, (err) => {
-      console.warn('Firestore zones listener error, using mock data:', err)
+      logger.warn('Firestore zones listener error — using mock data', err)
       setActiveZones(MOCK_ZONES)
       setIsLoading(false)
     })

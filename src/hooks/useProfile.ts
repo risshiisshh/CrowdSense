@@ -4,6 +4,7 @@ import { collection, getDocs, query, where, orderBy, doc, updateDoc } from 'fire
 import { useAppStore } from '../store/useAppStore'
 import { db, isFirebaseEnabled } from '../lib/firebase'
 import { MOCK_BADGES, MOCK_POINTS_HISTORY } from '../data/mockData'
+import { logger } from '../lib/logger'
 import type { Badge, PointsEntry, User } from '../types'
 
 export function useProfile() {
@@ -29,7 +30,7 @@ export function useProfile() {
         setPointsHistory(pointsSnap.docs.map(d => ({ id: d.id, ...d.data() } as PointsEntry)))
       }
     }).catch(err => {
-      console.warn('Firestore profile data load failed:', err)
+      logger.warn('Firestore profile data load failed', err)
     }).finally(() => setIsLoading(false))
   }, [user?.uid])
 
@@ -43,9 +44,9 @@ export function useProfile() {
     if (isFirebaseEnabled && db) {
       try {
         const userDocRef = doc(db, 'users', user.uid)
-        await updateDoc(userDocRef, updates as Record<string, any>)
+        await updateDoc(userDocRef, updates as Partial<User> & Record<string, unknown>)
       } catch (err) {
-        console.warn('Firestore profile update failed:', err)
+        logger.warn('Firestore profile update failed', err)
       }
     }
   }

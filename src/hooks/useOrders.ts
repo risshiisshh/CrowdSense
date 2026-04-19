@@ -2,8 +2,10 @@
 import { useState, useEffect } from 'react'
 import { collection, onSnapshot, query, where, orderBy, addDoc, doc, updateDoc } from 'firebase/firestore'
 import { db, isFirebaseEnabled } from '../lib/firebase'
+import { traceAsync } from '../lib/analytics'
 import { useAppStore } from '../store/useAppStore'
 import { MOCK_ORDER } from '../data/mockData'
+import { logger } from '../lib/logger'
 import type { FoodOrder, CartItem } from '../types'
 
 export function useOrders() {
@@ -25,7 +27,7 @@ export function useOrders() {
       }
       setIsLoading(false)
     }, (err) => {
-      console.warn('Firestore orders error:', err)
+      logger.warn('Firestore orders error', err)
       setIsLoading(false)
     })
 
@@ -61,11 +63,11 @@ export function useOrders() {
     }
 
     try {
-      const docRef = await addDoc(collection(db, 'orders'), orderData)
+      const docRef = await traceAsync('place_order', () => addDoc(collection(db!, 'orders'), orderData))
       showToast('🍔 Order placed successfully!', 'success')
       return { id: docRef.id, ...orderData }
     } catch (err) {
-      console.error('Order placement failed:', err)
+      logger.error('Order placement failed', err)
       showToast('Order failed — please try again', 'error')
       return null
     }
